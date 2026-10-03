@@ -125,7 +125,6 @@
             flex: 1 1 auto; 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            /* Se ha quitado el grid-template-rows fijo de aquí. Ahora lo controla JavaScript */
             background: var(--ios-border); 
             gap: 1px; 
             border-top: 1px solid var(--ios-border);
@@ -226,8 +225,7 @@
 
     <script>
         // ==========================================
-        // 1. CONFIGURACIÓN DE FIREBASE
-        // Sustituye con tus datos reales. ¡Ojo! Asegúrate de que databaseURL existe.
+        // CONFIGURACIÓN DE FIREBASE (¡Pon los tuyos aquí!)
         // ==========================================
         const firebaseConfig = {
             apiKey: "TU_API_KEY",
@@ -239,9 +237,9 @@
             appId: "TU_APP_ID"
         };
         
-        // Evitamos crasheos si la config está vacía
         let db = null;
         let datosDescargados = false;
+        let primerArranqueRealizado = false;
         
         try {
             if (firebaseConfig.apiKey !== "TU_API_KEY") {
@@ -293,7 +291,7 @@
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
                 saveAllDataToCloud();
-            }, 800);
+            }, 500); // Reducido a medio segundo para sincronización más rápida
         }
 
         function applyAutoColor(inputEl) {
@@ -323,10 +321,8 @@
                 }
             });
 
-            // Siempre guardamos una copia de seguridad en la memoria del dispositivo
             localStorage.setItem('miCalendarioData', JSON.stringify(data));
 
-            // Si hay red, guardamos en Firebase
             if (db && datosDescargados) {
                 db.ref('calendarioApp/datos').set(data).then(() => {
                     const indicator = document.getElementById('cloud-status');
@@ -334,10 +330,9 @@
                     setTimeout(() => { indicator.style.opacity = '0'; }, 1000);
                 }).catch(() => {
                     const indicator = document.getElementById('cloud-status');
-                    indicator.style.backgroundColor = 'var(--ios-red)'; // Rojo si falla la subida
+                    indicator.style.backgroundColor = 'var(--ios-red)';
                 });
             } else {
-                // Si no hay red, ocultamos el punto (solo guarda localmente)
                 document.getElementById('cloud-status').style.opacity = '0';
             }
         }
@@ -345,9 +340,7 @@
         let cloudDataGlobal = {}; 
 
         function loadSavedDataFromCloud(onComplete) {
-            // Si el código de Firebase no se ha puesto o hay un error de inicialización
             if (!db) {
-                console.log("Modo local activado (Falta Firebase)");
                 document.getElementById('sync-msg').innerText = "Iniciando modo local...";
                 setTimeout(onComplete, 500);
                 return;
@@ -355,7 +348,6 @@
 
             let timeoutHecho = false;
             
-            // Sistema Anti-Cuelgues: Si a los 5 segundos no carga, entra igual.
             const timeoutSeguridad = setTimeout(() => {
                 if(!timeoutHecho) {
                     timeoutHecho = true;
@@ -364,26 +356,61 @@
                 }
             }, 5000);
 
-            db.ref('calendarioApp/datos').once('value').then((snapshot) => {
-                if(timeoutHecho) return;
-                clearTimeout(timeoutSeguridad);
-                timeoutHecho = true;
+            // ==========================================
+            // MAGIA DE SINCRONIZACIÓN EN TIEMPO REAL
+            // Cambiado de .once() a .on() para que "escuche" constantemente
+            // ==========================================
+            db.ref('calendarioApp/datos').on('value', (snapshot) => {
+                if(!timeoutHecho) {
+                    clearTimeout(timeoutSeguridad);
+                    timeoutHecho = true;
+                }
                 
                 cloudDataGlobal = snapshot.val() || {};
                 datosDescargados = true;
-                onComplete();
-            }).catch(error => {
-                if(timeoutHecho) return;
-                clearTimeout(timeoutSeguridad);
-                timeoutHecho = true;
-                console.error("Error Firebase:", error);
-                document.getElementById('sync-msg').innerText = "Fallo de conexión. Usando modo local.";
-                setTimeout(onComplete, 1500);
+                
+                // Si es la primera vez que carga, abre la app
+                if(!primerArranqueRealizado) {
+                    primerArranqueRealizado = true;
+                    onComplete();
+                } else {
+                    // Si ya estaba abierta, actualiza la vista en vivo ("Live Sync")
+                    applyDataToViewLive();
+                }
             });
         }
 
-        function applyDataToView() {
-            // Intentamos cargar de la nube primero; si está vacía, usamos el almacenamiento local
+        // Esta nueva función pinta los datos en vivo PERO respeta lo que estés escribiendo en ese momento
+        function applyDataToViewLive() {
+            let dataToUse = cloudDataGlobal;
+            
+            document.querySelectorAll('.day').forEach(dayEl => {
+                const date = dayEl.dataset.date;
+                const inputs = dayEl.querySelectorAll('.calendar-input');
+                
+                if(inputs.length === 2) {
+                    if(dataToUse[date]) {
+                        // Comprueba si estás tecleando AHORA MISMO en la casilla de arriba
+                        if (document.activeElement !== inputs[0]) {
+                            inputs[0].value = dataToUse[date].top?.text || '';
+                            applyAutoColor(inputs[0]); 
+                        }
+                        // Comprueba si estás tecleando AHORA MISMO en la casilla de abajo
+                        if (document.activeElement !== inputs[1]) {
+                            inputs[1].value = dataToUse[date].bottom?.text || '';
+                            applyAutoColor(inputs[1]); 
+                        }
+                    } else {
+                        // Si borran un dato desde otro dispositivo, lo borra en este también (si no estás en él)
+                        if (document.activeElement !== inputs[0]) { inputs[0].value = ''; applyAutoColor(inputs[0]); }
+                        if (document.activeElement !== inputs[1]) { inputs[1].value = ''; applyAutoColor(inputs[1]); }
+                    }
+                }
+            });
+        }
+
+        // Función original de pintado para cuando cambias de mes (pinta todo sin restricciones)
+        function applyDataToViewFull() {
             let dataToUse = cloudDataGlobal;
             if (Object.keys(dataToUse).length === 0) {
                 const localStr = localStorage.getItem('miCalendarioData');
@@ -427,16 +454,12 @@
 
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            // Lunes es 0, Domingo es 6
             let startDay = firstDay === 0 ? 6 : firstDay - 1;
 
-            // CÁLCULO DINÁMICO DE FILAS: Exactamente las necesarias (multiplo de 7)
             const totalCeldasNecesarias = startDay + daysInMonth;
             const numeroFilasDias = Math.ceil(totalCeldasNecesarias / 7);
             const totalCeldasGrid = numeroFilasDias * 7;
 
-            // Actualizamos la altura de la cuadrícula por Javascript
-            // 'auto' es para los días de la semana. Luego X filas estirables.
             grid.style.gridTemplateRows = `auto repeat(${numeroFilasDias}, minmax(0, 1fr))`;
 
             for (let i = 0; i < totalCeldasGrid; i++) {
@@ -461,7 +484,7 @@
                 grid.appendChild(dayDiv);
             }
             
-            applyDataToView();
+            applyDataToViewFull();
         }
 
         function initCalendar() {
