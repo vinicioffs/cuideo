@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calendario Local</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        body { 
+            font-family: '-apple-system', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #1e293b; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #login-screen {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+        }
+        #login-screen h2 { margin-top: 0; color: #333; }
+        #login-screen input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        #login-screen button {
+            width: 100%;
+            padding: 10px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #error-msg { color: #f44336; font-size: 13px; margin-top: 10px; display: none; }
+
+        #calendar-container { 
+            display: none; 
+            width: 100%; 
+            max-width: 1200px; 
+            
+            /* AQUÍ PUEDES PONER EL ENLACE DE TU FOTO EXACTA */
+            background-image: url('/static/image.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            padding: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        }
+        
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+        .header-controls button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        h1 { margin: 0; color: #111; font-size: 1.1rem; text-transform: uppercase; }
+
+        .weekdays { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            font-size: 0.75rem;
+            font-weight: bold; 
+            text-align: center; 
+            margin-bottom: 10px; 
+            color: #222;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 0;
+            border-radius: 6px;
+        }
+        #calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 6px; 
+            /* Aumentado a 110px para evitar que se corte nada */
+            auto-rows: 110px; 
+        }
+        .day { 
+            position: relative; 
+            height: 105px; 
+            border: 1px solid rgba(255,255,255,0.4); 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            background: rgba(255, 255, 255, 0.5); 
+            backdrop-filter: blur(2px);
+        }
+        
+        .current-day {
+            border: 2px solid #ff9800; 
+            box-shadow: 0 0 12px rgba(255, 152, 0, 0.8); 
+            z-index: 2; 
+        }
+        
+        .half { 
+            flex: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; 
+            padding-right: 5px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
+        }
+        .half:last-child { border-bottom: none; }
+        
+        .bg-none { background: transparent; }
+        .bg-green { background: rgba(76, 175, 80, 0.8); }
+        .bg-red { background: rgba(244, 67, 54, 0.8); }
+        .bg-fuchsia { background: rgba(255, 0, 255, 0.8); }
+
+        .date-number { 
+            position: absolute; 
+            top: 2px; 
+            left: 2px; 
+            font-weight: bold; 
+            font-size: 0.85rem;
+            color: #333; 
+            background: rgba(255,255,255,0.95);
+            padding: 1px 4px;
+            border-radius: 4px;
+            pointer-events: none; 
+            z-index: 10;
+        }
+        
+        .current-day .date-number { background: #ff9800; color: white; }
+
+        .calendar-input { 
+            width: 72%; 
+            padding: 4px; 
+            text-align: left; 
+            border: 1px solid rgba(0,0,0,0.3); 
+            border-radius: 4px; 
+            font-size: 11px; 
+            font-weight: 600;
+            color: #111;
+            background: rgba(255, 255, 255, 0.7); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .calendar-input:focus { background: rgba(255, 255, 255, 0.95); outline: 2px solid #2196f3; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h2>Acceso Restringido</h2>
+        <input type="password" id="passwd-input" placeholder="Introduce la contraseña" onkeypress="checkEnter(event)">
+        <button onclick="verifyPassword()">Entrar</button>
+        <div id="error-msg">Contraseña incorrecta</div>
+    </div>
+
+    <div id="calendar-container">
+        <div class="header-controls">
+            <button onclick="changeMonth(-1)">&#10094; Anterior</button>
+            <h1 id="month-name">Calendario</h1>
+            <button onclick="changeMonth(1)">Siguiente &#10095;</button>
+        </div>
+        <div class="weekdays">
+            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+        </div>
+        <div id="calendar-grid"></div>
+    </div>
+
+    <script>
+        const PASSWORD_SECRETA = "1234"; 
+
+        function checkEnter(e) {
+            if (e.key === 'Enter') verifyPassword();
+        }
+
+        function verifyPassword() {
+            const inputVal = document.getElementById('passwd-input').value;
+            if (inputVal === PASSWORD_SECRETA) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('calendar-container').style.display = 'block';
+                initCalendar();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+                document.getElementById('passwd-input').value = '';
+            }
+        }
+
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        const realToday = new Date();
+        const todayStr = `${realToday.getFullYear()}-${String(realToday.getMonth()+1).padStart(2, '0')}-${String(realToday.getDate()).padStart(2, '0')}`;
+
+        function applyAutoColor(inputEl) {
+            const text = inputEl.value.toLowerCase().trim();
+            const halfEl = inputEl.parentElement;
+            
+            halfEl.classList.remove('bg-none', 'bg-red', 'bg-green', 'bg-fuchsia');
+
+            if (text.includes('alberto')) {
+                halfEl.classList.add('bg-red');
+            } else if (text.includes('manuel')) {
+                halfEl.classList.add('bg-green');
+            } else if (text.includes('elena')) {
+                halfEl.classList.add('bg-fuchsia');
+            } else {
+                halfEl.classList.add('bg-none');
+            }
+        }
+
+        function saveAllData() {
+            let data = {};
+            const savedStr = localStorage.getItem('miCalendarioData');
+            if (savedStr) data = JSON.parse(savedStr);
+
+            document.querySelectorAll('.day').forEach(dayEl => {
+                const date = dayEl.dataset.date;
+                if(!date) return;
+                
+                const halves = dayEl.querySelectorAll('.half');
+                if(halves.length === 2) {
+                    const topColor = Array.from(halves[0].classList).find(c => c.startsWith('bg-'));
+                    const topText = halves[0].querySelector('input').value;
+                    
+                    const bottomColor = Array.from(halves[1].classList).find(c => c.startsWith('bg-'));
+                    const bottomText = halves[1].querySelector('input').value;
+                    
+                    data[date] = {
+                        top: { color: topColor, text: topText },
+                        bottom: { color: bottomColor, text: bottomText }
+                    };
+                }
+            });
+            localStorage.setItem('miCalendarioData', JSON.stringify(data));
+        }
+
+        function changeMonth(offset) {
+            let newDate = new Date(currentYear, currentMonth + offset, 1);
+            currentYear = newDate.getFullYear();
+            currentMonth = newDate.getMonth();
+            renderCalendar(currentYear, currentMonth);
+        }
+
+        function renderCalendar(year, month) {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = ''; 
+            document.getElementById('month-name').textContent = monthNames[month] + " " + year;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let startDay = firstDay === 0 ? 6 : firstDay - 1;
+
+            for (let i = 0; i < startDay; i++) {
+                grid.innerHTML += '<div></div>';
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                let dayDiv = document.createElement('div');
+                dayDiv.className = 'day';
+                const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                dayDiv.dataset.date = dateStr;
+
+                if (dateStr === todayStr) {
+                    dayDiv.classList.add('current-day');
+                }
+
+                dayDiv.innerHTML = `
+                    <div class="date-number">${i}</div>
+                    <div class="half bg-none">
+                        <input type="text" class="calendar-input" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
+                    </div>
+                    <div class="half bg-none">
+                        <input type="text" class="calendar-input" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
+                    </div>
+                `;
+                grid.appendChild(dayDiv);
+            }
+            loadSavedData();
+        }
+
+        function loadSavedData() {
+            const savedStr = localStorage.getItem('miCalendarioData');
+            if(!savedStr) return;
+            
+            const data = JSON.parse(savedStr);
+            document.querySelectorAll('.day').forEach(dayEl => {
+                const date = dayEl.dataset.date;
+                if(data[date]) {
+                    const halves = dayEl.querySelectorAll('.half');
+                    
+                    const topInput = halves[0].querySelector('input');
+                    topInput.value = data[date].top.text || '';
+                    applyAutoColor(topInput); 
+                    
+                    const bottomInput = halves[1].querySelector('input');
+                    bottomInput.value = data[date].bottom.text || '';
+                    applyAutoColor(bottomInput); 
+                }
+            });
+        }
+
+        function initCalendar() {
+            renderCalendar(currentYear, currentMonth);
+        }
+    </script>
+</body>
+</html>
