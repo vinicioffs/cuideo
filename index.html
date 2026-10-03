@@ -9,22 +9,22 @@
     <style>
         body { 
             font-family: '-apple-system', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            /* Fondo de Yosemite en alta calidad */
             background-image: url('static/image.jpg');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed; /* Mejor rendimiento en scroll móvil */
             background-repeat: no-repeat;
             min-height: 100vh;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center;
+            justify-content: flex-start; /* Evita que se corte por arriba en móviles */
             margin: 0;
-            padding: 12px;
+            padding: 20px 12px;
             box-sizing: border-box;
         }
 
-        /* Pantalla de acceso con diseño suave */
+        /* Pantalla de acceso */
         #login-screen {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
@@ -36,6 +36,7 @@
             width: 100%;
             max-width: 320px;
             border: 1px solid rgba(255, 255, 255, 0.5);
+            margin: auto; /* Centra el login verticalmente */
         }
         #login-screen h2 { margin-top: 0; color: #1e293b; font-size: 1.25rem; font-weight: 700; }
         #login-screen input {
@@ -64,7 +65,7 @@
         #login-screen button:hover { background-color: #1d4ed8; }
         #error-msg { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; font-weight: 500; }
 
-        /* Contenedor principal del calendario con efecto cristal alpino */
+        /* Contenedor principal del calendario */
         #calendar-container { 
             display: none; 
             width: 100%; 
@@ -76,6 +77,8 @@
             border-radius: 20px; 
             box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
             border: 1px solid rgba(255, 255, 255, 0.25);
+            box-sizing: border-box;
+            margin: auto;
         }
         
         .header-controls {
@@ -88,6 +91,7 @@
             padding: 12px 18px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            gap: 10px;
         }
         .header-controls button {
             background-color: #2563eb;
@@ -99,9 +103,23 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
+            white-space: nowrap;
         }
         .header-controls button:hover { background-color: #1d4ed8; }
-        h1 { margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        h1 { margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+
+        /* Contenedor responsivo para permitir scroll horizontal en móviles */
+        .scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+            padding-bottom: 5px;
+        }
+
+        /* Ancho mínimo para garantizar que el grid no se aplaste en móviles */
+        .calendar-inner {
+            min-width: 700px; 
+        }
 
         .weekdays { 
             display: grid; 
@@ -116,12 +134,14 @@
             padding: 10px 0;
             border-radius: 10px;
         }
+        
         #calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
             gap: 8px; 
             auto-rows: 115px; 
         }
+        
         .day { 
             position: relative; 
             height: 110px; 
@@ -150,7 +170,7 @@
             display: flex;
             align-items: center;
             justify-content: flex-end; 
-            padding-right: 6px;
+            padding: 4px 6px;
             border-bottom: 1px solid rgba(0,0,0,0.06);
             transition: background 0.3s ease;
         }
@@ -179,19 +199,28 @@
         .current-day .date-number { background: #f59e0b; color: white; }
 
         .calendar-input { 
-            width: 74%; 
-            padding: 5px 6px; 
+            width: 85%; /* Mejorado para móviles */
+            padding: 6px; 
             text-align: left; 
             border: 1px solid rgba(0, 0, 0, 0.15); 
             border-radius: 6px; 
-            font-size: 11px; 
+            font-size: 12px; /* Ligeramente más grande para legibilidad */
             font-weight: 600;
             color: #0f172a;
             background: rgba(255, 255, 255, 0.85); 
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: all 0.2s;
+            box-sizing: border-box;
         }
         .calendar-input:focus { background: rgba(255, 255, 255, 1); outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
+
+        /* Ajustes específicos para móviles */
+        @media (max-width: 768px) {
+            #calendar-container { padding: 12px; }
+            .header-controls { flex-wrap: wrap; justify-content: center; padding: 10px; }
+            .header-controls h1 { width: 100%; margin: 10px 0; order: -1; }
+            .calendar-inner { min-width: 650px; } /* Permite hacer scroll en horizontal sin aplastar el contenido */
+        }
     </style>
 </head>
 <body>
@@ -209,10 +238,16 @@
             <h1 id="month-name">Calendario</h1>
             <button onclick="changeMonth(1)">Siguiente &#10095;</button>
         </div>
-        <div class="weekdays">
-            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+        
+        <!-- Nuevo contenedor para el scroll horizontal -->
+        <div class="scroll-wrapper">
+            <div class="calendar-inner">
+                <div class="weekdays">
+                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                </div>
+                <div id="calendar-grid"></div>
+            </div>
         </div>
-        <div id="calendar-grid"></div>
     </div>
 
     <script>
