@@ -7,247 +7,245 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
+        :root {
+            --ios-red: #ff3b30;
+            --ios-blue: #007aff;
+            --ios-green: #34c759;
+            --ios-purple: #af52de;
+            --ios-bg-blur: rgba(255, 255, 255, 0.75);
+            --ios-border: rgba(60, 60, 67, 0.15);
+        }
+
         body { 
-            font-family: '-apple-system', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: '-apple-system', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background-image: url('static/image.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed; /* Mejor rendimiento en scroll móvil */
-            background-repeat: no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: flex-start; /* Evita que se corte por arriba en móviles */
             margin: 0;
-            padding: 20px 12px;
+            padding: 0;
             box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Pantalla de acceso */
+        /* --- PANTALLA DE LOGIN ESTILO IOS --- */
         #login-screen {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 35px 25px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            background: var(--ios-bg-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             text-align: center;
-            width: 100%;
+            width: 90%;
             max-width: 320px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            margin: auto; /* Centra el login verticalmente */
+            margin: auto;
+            border: 1px solid rgba(255,255,255,0.4);
         }
-        #login-screen h2 { margin-top: 0; color: #1e293b; font-size: 1.25rem; font-weight: 700; }
+        #login-screen h2 { margin: 0 0 20px 0; color: #000; font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
         #login-screen input {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             font-size: 16px;
-            border: 1px solid rgba(0,0,0,0.15);
-            border-radius: 10px;
+            border: 1px solid var(--ios-border);
+            border-radius: 12px;
             margin-bottom: 15px;
             box-sizing: border-box;
             text-align: center;
             background: rgba(255, 255, 255, 0.9);
+            outline: none;
         }
+        #login-screen input:focus { border-color: var(--ios-blue); }
         #login-screen button {
             width: 100%;
-            padding: 12px;
-            background-color: #2563eb;
+            padding: 14px;
+            background-color: var(--ios-blue);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
         }
-        #login-screen button:hover { background-color: #1d4ed8; }
-        #error-msg { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; font-weight: 500; }
+        #error-msg { color: var(--ios-red); font-size: 14px; margin-top: 15px; display: none; font-weight: 500; }
 
-        /* Contenedor principal del calendario */
+        /* --- CONTENEDOR DEL CALENDARIO --- */
         #calendar-container { 
             display: none; 
             width: 100%; 
-            max-width: 1200px; 
-            background: rgba(15, 23, 42, 0.45);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            max-width: 1000px; 
+            background: var(--ios-bg-blur);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15); 
             box-sizing: border-box;
-            margin: auto;
+            margin: 20px auto;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.4);
         }
-        
+
+        /* Cabecera estilo Apple (Mes grande a la izquierda) */
         .header-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 12px 18px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            gap: 10px;
+            padding: 20px 20px 10px 20px;
         }
-        .header-controls button {
-            background-color: #2563eb;
-            color: white;
+        h1 { 
+            margin: 0; 
+            color: #000; 
+            font-size: 32px; 
+            font-weight: 700; 
+            letter-spacing: -1px;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        .nav-buttons button {
+            background: transparent;
+            color: var(--ios-red);
             border: none;
-            padding: 8px 14px;
-            font-size: 14px;
-            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 500;
             cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-        .header-controls button:hover { background-color: #1d4ed8; }
-        h1 { margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
-
-        /* Contenedor responsivo para permitir scroll horizontal en móviles */
-        .scroll-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
-            padding-bottom: 5px;
+            padding: 0 10px;
         }
 
-        /* Ancho mínimo para garantizar que el grid no se aplaste en móviles */
-        .calendar-inner {
-            min-width: 700px; 
-        }
-
+        /* Días de la semana */
         .weekdays { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            font-size: 0.8rem;
-            font-weight: 700; 
+            font-size: 11px;
+            font-weight: 600; 
+            text-transform: uppercase;
             text-align: center; 
-            margin-bottom: 10px; 
-            color: #0f172a;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            color: rgba(60, 60, 67, 0.6);
             padding: 10px 0;
-            border-radius: 10px;
+            border-bottom: 1px solid var(--ios-border);
         }
         
+        /* Cuadrícula con bordes hairline tipo iOS */
         #calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 8px; 
-            auto-rows: 115px; 
+            background: var(--ios-border); /* El fondo hace de borde */
+            gap: 1px; /* Espaciado de 1px crea los bordes finos */
         }
         
         .day { 
-            position: relative; 
-            height: 110px; 
-            border: 1px solid rgba(255, 255, 255, 0.3); 
-            border-radius: 10px; 
+            background: rgba(255, 255, 255, 0.6); 
             display: flex; 
             flex-direction: column; 
-            overflow: hidden; 
-            background: rgba(255, 255, 255, 0.65); 
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .day:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-        
-        .current-day {
-            border: 2px solid #f59e0b !important; 
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8); 
-            z-index: 2; 
-        }
-        
-        .half { 
-            flex: 1; 
-            display: flex;
-            align-items: center;
-            justify-content: flex-end; 
-            padding: 4px 6px;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            transition: background 0.3s ease;
-        }
-        .half:last-child { border-bottom: none; }
-        
-        .bg-none { background: transparent; }
-        .bg-green { background: rgba(34, 197, 94, 0.75); }
-        .bg-red { background: rgba(239, 68, 68, 0.75); }
-        .bg-fuchsia { background: rgba(217, 70, 239, 0.75); }
-
-        .date-number { 
-            position: absolute; 
-            top: 3px; 
-            left: 3px; 
-            font-weight: 700; 
-            font-size: 0.85rem;
-            color: #1e293b; 
-            background: rgba(255, 255, 255, 0.95);
-            padding: 1px 6px;
-            border-radius: 6px;
-            pointer-events: none; 
-            z-index: 10;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .current-day .date-number { background: #f59e0b; color: white; }
-
-        .calendar-input { 
-            width: 85%; /* Mejorado para móviles */
-            padding: 6px; 
-            text-align: left; 
-            border: 1px solid rgba(0, 0, 0, 0.15); 
-            border-radius: 6px; 
-            font-size: 12px; /* Ligeramente más grande para legibilidad */
-            font-weight: 600;
-            color: #0f172a;
-            background: rgba(255, 255, 255, 0.85); 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            transition: all 0.2s;
+            height: 110px; 
+            padding: 4px;
             box-sizing: border-box;
         }
-        .calendar-input:focus { background: rgba(255, 255, 255, 1); outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
+        
+        /* Número del día centrado arriba */
+        .date-number { 
+            font-weight: 500; 
+            font-size: 15px;
+            color: #000; 
+            text-align: center;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            margin: 0 auto 4px auto;
+            border-radius: 50%;
+        }
+        
+        /* Estilo para el día de HOY (Círculo rojo iOS) */
+        .current-day .date-number { 
+            background: var(--ios-red); 
+            color: white; 
+            font-weight: 600;
+        }
 
-        /* Ajustes específicos para móviles */
+        /* Inputs transformados en "Eventos" (Píldoras) */
+        .calendar-input { 
+            width: 100%; 
+            padding: 4px 6px; 
+            margin-bottom: 4px;
+            border: none; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            font-weight: 500;
+            box-sizing: border-box;
+            outline: none;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: background 0.2s, transform 0.1s;
+        }
+        
+        .calendar-input:focus { 
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+            position: relative;
+        }
+
+        /* Colores Automáticos Apple Style */
+        .bg-none { background: rgba(0, 0, 0, 0.05); color: #000; }
+        .bg-red { background: var(--ios-red); color: white; }
+        .bg-green { background: var(--ios-green); color: white; }
+        .bg-fuchsia { background: var(--ios-purple); color: white; }
+
+        /* --- ADAPTACIÓN PERFECTA PARA MÓVILES --- */
         @media (max-width: 768px) {
-            #calendar-container { padding: 12px; }
-            .header-controls { flex-wrap: wrap; justify-content: center; padding: 10px; }
-            .header-controls h1 { width: 100%; margin: 10px 0; order: -1; }
-            .calendar-inner { min-width: 650px; } /* Permite hacer scroll en horizontal sin aplastar el contenido */
+            body { padding: 0; }
+            #calendar-container { 
+                margin: 0; 
+                border-radius: 0; /* Pantalla completa en móvil */
+                min-height: 100vh;
+                border: none;
+            }
+            .header-controls { padding: 40px 15px 10px 15px; } /* Más espacio arriba para la barra de estado iOS */
+            h1 { font-size: 28px; }
+            
+            /* Maximizamos el espacio de las celdas */
+            .day { padding: 2px; height: 95px; }
+            .date-number { font-size: 13px; width: 24px; height: 24px; line-height: 24px; margin-bottom: 2px; }
+            
+            /* Entradas de texto más pequeñas pero de ancho completo */
+            .calendar-input {
+                font-size: 10px;
+                padding: 4px 2px;
+                border-radius: 3px;
+                margin-bottom: 2px;
+                letter-spacing: -0.3px; /* Ayuda a que quepan más letras */
+            }
         }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h2>Acceso Restringido</h2>
-        <input type="password" id="passwd-input" placeholder="Introduce la contraseña" onkeypress="checkEnter(event)">
-        <button onclick="verifyPassword()">Entrar</button>
+        <h2>Calendario</h2>
+        <input type="password" id="passwd-input" placeholder="Contraseña" onkeypress="checkEnter(event)">
+        <button onclick="verifyPassword()">Desbloquear</button>
         <div id="error-msg">Contraseña incorrecta</div>
     </div>
 
     <div id="calendar-container">
         <div class="header-controls">
-            <button onclick="changeMonth(-1)">&#10094; Anterior</button>
             <h1 id="month-name">Calendario</h1>
-            <button onclick="changeMonth(1)">Siguiente &#10095;</button>
-        </div>
-        
-        <!-- Nuevo contenedor para el scroll horizontal -->
-        <div class="scroll-wrapper">
-            <div class="calendar-inner">
-                <div class="weekdays">
-                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-                </div>
-                <div id="calendar-grid"></div>
+            <div class="nav-buttons">
+                <button onclick="changeMonth(-1)">&#10094;</button>
+                <button onclick="changeMonth(1)">&#10095;</button>
             </div>
         </div>
+        
+        <div class="weekdays">
+            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+        </div>
+        <div id="calendar-grid"></div>
     </div>
 
     <script>
@@ -277,47 +275,41 @@
         const realToday = new Date();
         const todayStr = `${realToday.getFullYear()}-${String(realToday.getMonth()+1).padStart(2, '0')}-${String(realToday.getDate()).padStart(2, '0')}`;
 
+        // Lógica de color actualizada (se aplica directamente al input)
         function applyAutoColor(inputEl) {
             const text = inputEl.value.toLowerCase().trim();
-            const halfEl = inputEl.parentElement;
             
-            halfEl.classList.remove('bg-none', 'bg-red', 'bg-green', 'bg-fuchsia');
+            inputEl.classList.remove('bg-none', 'bg-red', 'bg-green', 'bg-fuchsia');
 
             if (text.includes('alberto')) {
-                halfEl.classList.add('bg-red');
+                inputEl.classList.add('bg-red');
             } else if (text.includes('manuel')) {
-                halfEl.classList.add('bg-green');
+                inputEl.classList.add('bg-green');
             } else if (text.includes('elena')) {
-                halfEl.classList.add('bg-fuchsia');
+                inputEl.classList.add('bg-fuchsia');
             } else {
-                halfEl.classList.add('bg-none');
+                inputEl.classList.add('bg-none');
             }
         }
 
         function saveAllData() {
             let data = {};
-            const savedStr = localStorage.getItem('miCalendarioData');
+            const savedStr = localStorage.getItem('miCalendarioData_v2');
             if (savedStr) data = JSON.parse(savedStr);
 
             document.querySelectorAll('.day').forEach(dayEl => {
                 const date = dayEl.dataset.date;
                 if(!date) return;
                 
-                const halves = dayEl.querySelectorAll('.half');
-                if(halves.length === 2) {
-                    const topColor = Array.from(halves[0].classList).find(c => c.startsWith('bg-'));
-                    const topText = halves[0].querySelector('input').value;
-                    
-                    const bottomColor = Array.from(halves[1].classList).find(c => c.startsWith('bg-'));
-                    const bottomText = halves[1].querySelector('input').value;
-                    
+                const inputs = dayEl.querySelectorAll('.calendar-input');
+                if(inputs.length === 2) {
                     data[date] = {
-                        top: { color: topColor, text: topText },
-                        bottom: { color: bottomColor, text: bottomText }
+                        top: { text: inputs[0].value },
+                        bottom: { text: inputs[1].value }
                     };
                 }
             });
-            localStorage.setItem('miCalendarioData', JSON.stringify(data));
+            localStorage.setItem('miCalendarioData_v2', JSON.stringify(data));
         }
 
         function changeMonth(offset) {
@@ -336,10 +328,14 @@
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             let startDay = firstDay === 0 ? 6 : firstDay - 1;
 
+            // Rellenar días vacíos al inicio
             for (let i = 0; i < startDay; i++) {
-                grid.innerHTML += '<div></div>';
+                let emptyDiv = document.createElement('div');
+                emptyDiv.style.background = "rgba(255,255,255,0.3)";
+                grid.appendChild(emptyDiv);
             }
 
+            // Rellenar días del mes
             for (let i = 1; i <= daysInMonth; i++) {
                 let dayDiv = document.createElement('div');
                 dayDiv.className = 'day';
@@ -352,35 +348,40 @@
 
                 dayDiv.innerHTML = `
                     <div class="date-number">${i}</div>
-                    <div class="half bg-none">
-                        <input type="text" class="calendar-input" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
-                    </div>
-                    <div class="half bg-none">
-                        <input type="text" class="calendar-input" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
-                    </div>
+                    <input type="text" class="calendar-input bg-none" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
+                    <input type="text" class="calendar-input bg-none" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
                 `;
                 grid.appendChild(dayDiv);
             }
+            
+            // Rellenar días vacíos al final para cuadrar la última fila
+            const totalCells = startDay + daysInMonth;
+            const remainingCells = (7 - (totalCells % 7)) % 7;
+            for (let i = 0; i < remainingCells; i++) {
+                let emptyDiv = document.createElement('div');
+                emptyDiv.style.background = "rgba(255,255,255,0.3)";
+                grid.appendChild(emptyDiv);
+            }
+
             loadSavedData();
         }
 
         function loadSavedData() {
-            const savedStr = localStorage.getItem('miCalendarioData');
+            const savedStr = localStorage.getItem('miCalendarioData_v2');
             if(!savedStr) return;
             
             const data = JSON.parse(savedStr);
             document.querySelectorAll('.day').forEach(dayEl => {
                 const date = dayEl.dataset.date;
                 if(data[date]) {
-                    const halves = dayEl.querySelectorAll('.half');
-                    
-                    const topInput = halves[0].querySelector('input');
-                    topInput.value = data[date].top.text || '';
-                    applyAutoColor(topInput); 
-                    
-                    const bottomInput = halves[1].querySelector('input');
-                    bottomInput.value = data[date].bottom.text || '';
-                    applyAutoColor(bottomInput); 
+                    const inputs = dayEl.querySelectorAll('.calendar-input');
+                    if(inputs.length === 2) {
+                        inputs[0].value = data[date].top.text || '';
+                        applyAutoColor(inputs[0]); 
+                        
+                        inputs[1].value = data[date].bottom.text || '';
+                        applyAutoColor(inputs[1]); 
+                    }
                 }
             });
         }
