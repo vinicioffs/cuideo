@@ -3,70 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calendario Local</title>
+    <title>Calendario Yosemite</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         body { 
             font-family: '-apple-system', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #1e293b; 
+            /* Fondo de Yosemite en alta calidad */
+            background-image: url('https://images.unsplash.com/photo-1426604966848-d7adacbd02bff?auto=format&fit=crop&w=2000&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             min-height: 100vh;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center;
             margin: 0;
-            padding: 10px;
+            padding: 12px;
             box-sizing: border-box;
         }
 
+        /* Pantalla de acceso con diseño suave */
         #login-screen {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 35px 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             text-align: center;
             width: 100%;
             max-width: 320px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
-        #login-screen h2 { margin-top: 0; color: #333; }
+        #login-screen h2 { margin-top: 0; color: #1e293b; font-size: 1.25rem; font-weight: 700; }
         #login-screen input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 10px;
             margin-bottom: 15px;
             box-sizing: border-box;
             text-align: center;
+            background: rgba(255, 255, 255, 0.9);
         }
         #login-screen button {
             width: 100%;
-            padding: 10px;
-            background-color: #2196f3;
+            padding: 12px;
+            background-color: #2563eb;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
-        #error-msg { color: #f44336; font-size: 13px; margin-top: 10px; display: none; }
+        #login-screen button:hover { background-color: #1d4ed8; }
+        #error-msg { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; font-weight: 500; }
 
+        /* Contenedor principal del calendario con efecto cristal alpino */
         #calendar-container { 
             display: none; 
             width: 100%; 
             max-width: 1200px; 
-            
-            /* AQUÍ PUEDES PONER EL ENLACE DE TU FOTO EXACTA */
-            background-image: url('/static/image.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            
-            padding: 15px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.25);
         }
         
         .header-controls {
@@ -74,57 +83,65 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px 15px;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 12px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .header-controls button {
-            background-color: #2196f3;
+            background-color: #2563eb;
             color: white;
             border: none;
             padding: 8px 14px;
             font-size: 14px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            transition: background 0.2s;
         }
-        h1 { margin: 0; color: #111; font-size: 1.1rem; text-transform: uppercase; }
+        .header-controls button:hover { background-color: #1d4ed8; }
+        h1 { margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .weekdays { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            font-size: 0.75rem;
-            font-weight: bold; 
+            font-size: 0.8rem;
+            font-weight: 700; 
             text-align: center; 
             margin-bottom: 10px; 
-            color: #222;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 8px 0;
-            border-radius: 6px;
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 10px 0;
+            border-radius: 10px;
         }
         #calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 6px; 
-            /* Aumentado a 110px para evitar que se corte nada */
-            auto-rows: 110px; 
+            gap: 8px; 
+            auto-rows: 115px; 
         }
         .day { 
             position: relative; 
-            height: 105px; 
-            border: 1px solid rgba(255,255,255,0.4); 
-            border-radius: 6px; 
+            height: 110px; 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 10px; 
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
-            background: rgba(255, 255, 255, 0.5); 
-            backdrop-filter: blur(2px);
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .day:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
         
         .current-day {
-            border: 2px solid #ff9800; 
-            box-shadow: 0 0 12px rgba(255, 152, 0, 0.8); 
+            border: 2px solid #f59e0b !important; 
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8); 
             z-index: 2; 
         }
         
@@ -133,46 +150,48 @@
             display: flex;
             align-items: center;
             justify-content: flex-end; 
-            padding-right: 5px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-right: 6px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
             transition: background 0.3s ease;
         }
         .half:last-child { border-bottom: none; }
         
         .bg-none { background: transparent; }
-        .bg-green { background: rgba(76, 175, 80, 0.8); }
-        .bg-red { background: rgba(244, 67, 54, 0.8); }
-        .bg-fuchsia { background: rgba(255, 0, 255, 0.8); }
+        .bg-green { background: rgba(34, 197, 94, 0.75); }
+        .bg-red { background: rgba(239, 68, 68, 0.75); }
+        .bg-fuchsia { background: rgba(217, 70, 239, 0.75); }
 
         .date-number { 
             position: absolute; 
-            top: 2px; 
-            left: 2px; 
-            font-weight: bold; 
+            top: 3px; 
+            left: 3px; 
+            font-weight: 700; 
             font-size: 0.85rem;
-            color: #333; 
-            background: rgba(255,255,255,0.95);
-            padding: 1px 4px;
-            border-radius: 4px;
+            color: #1e293b; 
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1px 6px;
+            border-radius: 6px;
             pointer-events: none; 
             z-index: 10;
-        }
-        
-        .current-day .date-number { background: #ff9800; color: white; }
-
-        .calendar-input { 
-            width: 72%; 
-            padding: 4px; 
-            text-align: left; 
-            border: 1px solid rgba(0,0,0,0.3); 
-            border-radius: 4px; 
-            font-size: 11px; 
-            font-weight: 600;
-            color: #111;
-            background: rgba(255, 255, 255, 0.7); 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .calendar-input:focus { background: rgba(255, 255, 255, 0.95); outline: 2px solid #2196f3; }
+        
+        .current-day .date-number { background: #f59e0b; color: white; }
+
+        .calendar-input { 
+            width: 74%; 
+            padding: 5px 6px; 
+            text-align: left; 
+            border: 1px solid rgba(0, 0, 0, 0.15); 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 600;
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.85); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .calendar-input:focus { background: rgba(255, 255, 255, 1); outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
     </style>
 </head>
 <body>
@@ -197,7 +216,7 @@
     </div>
 
     <script>
-        const PASSWORD_SECRETA = "15m"; 
+        const PASSWORD_SECRETA = "1234"; 
 
         function checkEnter(e) {
             if (e.key === 'Enter') verifyPassword();
