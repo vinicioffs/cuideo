@@ -6,6 +6,8 @@
     <title>Calendario Yosemite</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
             --ios-red: #ff3b30;
@@ -73,6 +75,7 @@
             cursor: pointer;
         }
         #error-msg { color: var(--ios-red); font-size: 14px; margin-top: 15px; display: none; font-weight: 500; }
+        #sync-msg { font-size: 13px; color: var(--ios-blue); margin-top: 10px; display: none; font-weight: 600; }
 
         /* --- CONTENEDOR DEL CALENDARIO --- */
         #calendar-container { 
@@ -100,6 +103,13 @@
             font-size: 30px; 
             font-weight: 700; 
             letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cloud-indicator {
+            width: 8px; height: 8px; border-radius: 50%; background-color: var(--ios-green);
+            display: inline-block; opacity: 0; transition: opacity 0.3s;
         }
         .nav-buttons button {
             background: transparent;
@@ -111,12 +121,11 @@
             padding: 0 10px;
         }
         
-        /* --- CUADRÍCULA UNIFICADA --- */
         #calendar-grid { 
             flex: 1 1 auto; 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            grid-template-rows: auto repeat(6, minmax(0, 1fr)); 
+            /* Se ha quitado el grid-template-rows fijo de aquí. Ahora lo controla JavaScript */
             background: var(--ios-border); 
             gap: 1px; 
             border-top: 1px solid var(--ios-border);
@@ -187,12 +196,7 @@
         .bg-fuchsia { background: var(--ios-purple); color: white; }
 
         @media (min-width: 769px) {
-            #calendar-container {
-                height: 85vh; 
-                border-radius: 24px;
-                border: 1px solid rgba(255,255,255,0.4);
-                box-shadow: 0 20px 40px rgba(0,0,0,0.15); 
-            }
+            #calendar-container { height: 85vh; border-radius: 24px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
             .header-controls { padding: 20px; }
             .calendar-input { font-size: 12px; padding: 4px 6px; }
             .date-number { width: 28px; height: 28px; line-height: 28px; font-size: 15px; }
@@ -206,21 +210,47 @@
         <input type="password" id="passwd-input" placeholder="Contraseña" onkeypress="checkEnter(event)">
         <button onclick="verifyPassword()">Desbloquear</button>
         <div id="error-msg">Contraseña incorrecta</div>
+        <div id="sync-msg">Conectando a la red...</div>
     </div>
 
     <div id="calendar-container">
         <div class="header-controls">
-            <h1 id="month-name">Calendario</h1>
+            <h1><span id="month-name">Calendario</span> <span class="cloud-indicator" id="cloud-status"></span></h1>
             <div class="nav-buttons">
                 <button onclick="changeMonth(-1)">&#10094;</button>
                 <button onclick="changeMonth(1)">&#10095;</button>
             </div>
         </div>
-        
         <div id="calendar-grid"></div>
     </div>
 
     <script>
+        // ==========================================
+        // 1. CONFIGURACIÓN DE FIREBASE
+        // Sustituye con tus datos reales. ¡Ojo! Asegúrate de que databaseURL existe.
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com", 
+            projectId: "TU_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TUS_NUMEROS",
+            appId: "TU_APP_ID"
+        };
+        
+        // Evitamos crasheos si la config está vacía
+        let db = null;
+        let datosDescargados = false;
+        
+        try {
+            if (firebaseConfig.apiKey !== "TU_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+            }
+        } catch(e) { console.warn("Firebase no inicializado"); }
+        // ==========================================
+
         const PASSWORD_SECRETA = "1234"; 
 
         function checkEnter(e) {
@@ -230,9 +260,14 @@
         function verifyPassword() {
             const inputVal = document.getElementById('passwd-input').value;
             if (inputVal === PASSWORD_SECRETA) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('calendar-container').style.display = 'flex';
-                initCalendar();
+                document.getElementById('error-msg').style.display = 'none';
+                document.getElementById('sync-msg').style.display = 'block';
+                
+                loadSavedDataFromCloud(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('calendar-container').style.display = 'flex';
+                    initCalendar();
+                });
             } else {
                 document.getElementById('error-msg').style.display = 'block';
                 document.getElementById('passwd-input').value = '';
@@ -247,48 +282,127 @@
         const realToday = new Date();
         const todayStr = `${realToday.getFullYear()}-${String(realToday.getMonth()+1).padStart(2, '0')}-${String(realToday.getDate()).padStart(2, '0')}`;
 
-        // Función unificada que colorea y guarda al instante
+        let saveTimeout;
         function handleInput(inputEl) {
             applyAutoColor(inputEl);
-            saveAllData();
+            
+            const indicator = document.getElementById('cloud-status');
+            indicator.style.opacity = '1';
+            indicator.style.backgroundColor = '#f59e0b'; 
+
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveAllDataToCloud();
+            }, 800);
         }
 
         function applyAutoColor(inputEl) {
             const text = inputEl.value.toLowerCase().trim();
             inputEl.classList.remove('bg-none', 'bg-red', 'bg-green', 'bg-fuchsia');
 
-            if (text.includes('alberto')) {
-                inputEl.classList.add('bg-red');
-            } else if (text.includes('manuel')) {
-                inputEl.classList.add('bg-green');
-            } else if (text.includes('elena')) {
-                inputEl.classList.add('bg-fuchsia');
-            } else {
-                inputEl.classList.add('bg-none');
-            }
+            if (text.includes('alberto')) { inputEl.classList.add('bg-red'); } 
+            else if (text.includes('manuel')) { inputEl.classList.add('bg-green'); } 
+            else if (text.includes('elena')) { inputEl.classList.add('bg-fuchsia'); } 
+            else { inputEl.classList.add('bg-none'); }
         }
 
-        function saveAllData() {
+        function saveAllDataToCloud() {
             let data = {};
-            try {
-                // He vuelto a poner 'miCalendarioData' para que recupere tus datos antiguos
-                const savedStr = localStorage.getItem('miCalendarioData');
-                if (savedStr) data = JSON.parse(savedStr);
-            } catch(e) {}
-
             document.querySelectorAll('.day').forEach(dayEl => {
                 const date = dayEl.dataset.date;
                 if(!date) return;
                 
                 const inputs = dayEl.querySelectorAll('.calendar-input');
                 if(inputs.length === 2) {
-                    data[date] = {
-                        top: { text: inputs[0].value },
-                        bottom: { text: inputs[1].value }
-                    };
+                    if(inputs[0].value.trim() !== '' || inputs[1].value.trim() !== '') {
+                        data[date] = {
+                            top: { text: inputs[0].value },
+                            bottom: { text: inputs[1].value }
+                        };
+                    }
                 }
             });
+
+            // Siempre guardamos una copia de seguridad en la memoria del dispositivo
             localStorage.setItem('miCalendarioData', JSON.stringify(data));
+
+            // Si hay red, guardamos en Firebase
+            if (db && datosDescargados) {
+                db.ref('calendarioApp/datos').set(data).then(() => {
+                    const indicator = document.getElementById('cloud-status');
+                    indicator.style.backgroundColor = 'var(--ios-green)';
+                    setTimeout(() => { indicator.style.opacity = '0'; }, 1000);
+                }).catch(() => {
+                    const indicator = document.getElementById('cloud-status');
+                    indicator.style.backgroundColor = 'var(--ios-red)'; // Rojo si falla la subida
+                });
+            } else {
+                // Si no hay red, ocultamos el punto (solo guarda localmente)
+                document.getElementById('cloud-status').style.opacity = '0';
+            }
+        }
+
+        let cloudDataGlobal = {}; 
+
+        function loadSavedDataFromCloud(onComplete) {
+            // Si el código de Firebase no se ha puesto o hay un error de inicialización
+            if (!db) {
+                console.log("Modo local activado (Falta Firebase)");
+                document.getElementById('sync-msg').innerText = "Iniciando modo local...";
+                setTimeout(onComplete, 500);
+                return;
+            }
+
+            let timeoutHecho = false;
+            
+            // Sistema Anti-Cuelgues: Si a los 5 segundos no carga, entra igual.
+            const timeoutSeguridad = setTimeout(() => {
+                if(!timeoutHecho) {
+                    timeoutHecho = true;
+                    document.getElementById('sync-msg').innerText = "Modo sin conexión (Timeout)";
+                    setTimeout(onComplete, 1000);
+                }
+            }, 5000);
+
+            db.ref('calendarioApp/datos').once('value').then((snapshot) => {
+                if(timeoutHecho) return;
+                clearTimeout(timeoutSeguridad);
+                timeoutHecho = true;
+                
+                cloudDataGlobal = snapshot.val() || {};
+                datosDescargados = true;
+                onComplete();
+            }).catch(error => {
+                if(timeoutHecho) return;
+                clearTimeout(timeoutSeguridad);
+                timeoutHecho = true;
+                console.error("Error Firebase:", error);
+                document.getElementById('sync-msg').innerText = "Fallo de conexión. Usando modo local.";
+                setTimeout(onComplete, 1500);
+            });
+        }
+
+        function applyDataToView() {
+            // Intentamos cargar de la nube primero; si está vacía, usamos el almacenamiento local
+            let dataToUse = cloudDataGlobal;
+            if (Object.keys(dataToUse).length === 0) {
+                const localStr = localStorage.getItem('miCalendarioData');
+                if (localStr) dataToUse = JSON.parse(localStr);
+            }
+
+            document.querySelectorAll('.day').forEach(dayEl => {
+                const date = dayEl.dataset.date;
+                if(dataToUse[date]) {
+                    const inputs = dayEl.querySelectorAll('.calendar-input');
+                    if(inputs.length === 2) {
+                        inputs[0].value = dataToUse[date].top?.text || '';
+                        applyAutoColor(inputs[0]); 
+                        
+                        inputs[1].value = dataToUse[date].bottom?.text || '';
+                        applyAutoColor(inputs[1]); 
+                    }
+                }
+            });
         }
 
         function changeMonth(offset) {
@@ -313,9 +427,19 @@
 
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
+            // Lunes es 0, Domingo es 6
             let startDay = firstDay === 0 ? 6 : firstDay - 1;
 
-            for (let i = 0; i < 42; i++) {
+            // CÁLCULO DINÁMICO DE FILAS: Exactamente las necesarias (multiplo de 7)
+            const totalCeldasNecesarias = startDay + daysInMonth;
+            const numeroFilasDias = Math.ceil(totalCeldasNecesarias / 7);
+            const totalCeldasGrid = numeroFilasDias * 7;
+
+            // Actualizamos la altura de la cuadrícula por Javascript
+            // 'auto' es para los días de la semana. Luego X filas estirables.
+            grid.style.gridTemplateRows = `auto repeat(${numeroFilasDias}, minmax(0, 1fr))`;
+
+            for (let i = 0; i < totalCeldasGrid; i++) {
                 let dayDiv = document.createElement('div');
                 dayDiv.className = 'day';
 
@@ -324,11 +448,8 @@
                     const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                     dayDiv.dataset.date = dateStr;
 
-                    if (dateStr === todayStr) {
-                        dayDiv.classList.add('current-day');
-                    }
+                    if (dateStr === todayStr) { dayDiv.classList.add('current-day'); }
 
-                    // Se cambió onchange="..." por oninput="handleInput(this)" para guardado en tiempo real
                     dayDiv.innerHTML = `
                         <div class="date-number">${dayNum}</div>
                         <input type="text" class="calendar-input bg-none" placeholder="..." oninput="handleInput(this)">
@@ -340,30 +461,7 @@
                 grid.appendChild(dayDiv);
             }
             
-            loadSavedData();
-        }
-
-        function loadSavedData() {
-            let data = {};
-            try {
-                const savedStr = localStorage.getItem('miCalendarioData');
-                if(!savedStr) return;
-                data = JSON.parse(savedStr);
-            } catch(e) { return; }
-            
-            document.querySelectorAll('.day').forEach(dayEl => {
-                const date = dayEl.dataset.date;
-                if(data[date]) {
-                    const inputs = dayEl.querySelectorAll('.calendar-input');
-                    if(inputs.length === 2) {
-                        inputs[0].value = data[date].top?.text || '';
-                        applyAutoColor(inputs[0]); 
-                        
-                        inputs[1].value = data[date].bottom?.text || '';
-                        applyAutoColor(inputs[1]); 
-                    }
-                }
-            });
+            applyDataToView();
         }
 
         function initCalendar() {
