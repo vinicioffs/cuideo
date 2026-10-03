@@ -227,15 +227,23 @@
         // ==========================================
         // CONFIGURACIÓN DE FIREBASE (¡Pon los tuyos aquí!)
         // ==========================================
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_PROYECTO.firebaseapp.com",
-            databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com", 
-            projectId: "TU_PROYECTO",
-            storageBucket: "TU_PROYECTO.appspot.com",
-            messagingSenderId: "TUS_NUMEROS",
-            appId: "TU_APP_ID"
-        };
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAIhfr-DzoNveOwvvruUIsKDsVJp4nQ5nY",
+  authDomain: "calendario-cuide.firebaseapp.com",
+  projectId: "calendario-cuide",
+  storageBucket: "calendario-cuide.firebasestorage.app",
+  messagingSenderId: "1025357021389",
+  appId: "1:1025357021389:web:09f8a0b901a2545170a984"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
         
         let db = null;
         let datosDescargados = false;
