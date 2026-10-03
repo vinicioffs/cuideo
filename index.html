@@ -6,250 +6,251 @@
     <title>Calendario Yosemite</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root {
-            --ios-red: #ff3b30;
-            --ios-blue: #007aff;
-            --ios-green: #34c759;
-            --ios-purple: #af52de;
-            --ios-bg-blur: rgba(255, 255, 255, 0.75);
-            --ios-border: rgba(60, 60, 67, 0.25);
-            --ios-header-bg: rgba(229, 229, 234, 0.85); 
-        }
-
         body { 
-            font-family: '-apple-system', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: '-apple-system', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background-image: url('static/image.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
-            height: 100dvh; 
-            width: 100vw;
+            background-attachment: fixed; /* Mejor rendimiento en scroll móvil */
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: flex-start; /* Evita que se corte por arriba en móviles */
             margin: 0;
-            padding: 0;
+            padding: 20px 12px;
             box-sizing: border-box;
-            overflow: hidden; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        /* --- PANTALLA DE LOGIN --- */
+        /* Pantalla de acceso */
         #login-screen {
-            background: var(--ios-bg-blur);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 40px 25px;
-            border-radius: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 35px 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             text-align: center;
-            width: 90%;
+            width: 100%;
             max-width: 320px;
-            border: 1px solid rgba(255,255,255,0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            margin: auto; /* Centra el login verticalmente */
         }
-        #login-screen h2 { margin: 0 0 20px 0; color: #000; font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+        #login-screen h2 { margin-top: 0; color: #1e293b; font-size: 1.25rem; font-weight: 700; }
         #login-screen input {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             font-size: 16px;
-            border: 1px solid rgba(60, 60, 67, 0.15);
-            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 10px;
             margin-bottom: 15px;
             box-sizing: border-box;
             text-align: center;
             background: rgba(255, 255, 255, 0.9);
-            outline: none;
         }
-        #login-screen input:focus { border-color: var(--ios-blue); }
         #login-screen button {
             width: 100%;
-            padding: 14px;
-            background-color: var(--ios-blue);
+            padding: 12px;
+            background-color: #2563eb;
             color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 17px;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
-        #error-msg { color: var(--ios-red); font-size: 14px; margin-top: 15px; display: none; font-weight: 500; }
-        #sync-msg { font-size: 13px; color: var(--ios-blue); margin-top: 10px; display: none; font-weight: 600; }
+        #login-screen button:hover { background-color: #1d4ed8; }
+        #error-msg { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; font-weight: 500; }
 
-        /* --- CONTENEDOR DEL CALENDARIO --- */
+        /* Contenedor principal del calendario */
         #calendar-container { 
             display: none; 
-            flex-direction: column;
             width: 100%; 
-            max-width: 1000px; 
-            height: 100dvh; 
-            background: var(--ios-bg-blur);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            max-width: 1200px; 
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.25);
             box-sizing: border-box;
+            margin: auto;
         }
-
+        
         .header-controls {
-            flex: 0 0 auto; 
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 45px 20px 15px 20px; 
-        }
-        h1 { 
-            margin: 0; 
-            color: #000; 
-            font-size: 30px; 
-            font-weight: 700; 
-            letter-spacing: -1px;
-            display: flex;
-            align-items: center;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 12px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             gap: 10px;
         }
-        .cloud-indicator {
-            width: 8px; height: 8px; border-radius: 50%; background-color: var(--ios-green);
-            display: inline-block; opacity: 0; transition: opacity 0.3s;
-        }
-        .nav-buttons button {
-            background: transparent;
-            color: var(--ios-red);
+        .header-controls button {
+            background-color: #2563eb;
+            color: white;
             border: none;
-            font-size: 26px;
-            font-weight: 500;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 8px;
             cursor: pointer;
-            padding: 0 10px;
+            font-weight: 600;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .header-controls button:hover { background-color: #1d4ed8; }
+        h1 { margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+
+        /* Contenedor responsivo para permitir scroll horizontal en móviles */
+        .scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+            padding-bottom: 5px;
+        }
+
+        /* Ancho mínimo para garantizar que el grid no se aplaste en móviles */
+        .calendar-inner {
+            min-width: 700px; 
+        }
+
+        .weekdays { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            font-size: 0.8rem;
+            font-weight: 700; 
+            text-align: center; 
+            margin-bottom: 10px; 
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 10px 0;
+            border-radius: 10px;
         }
         
         #calendar-grid { 
-            flex: 1 1 auto; 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            background: var(--ios-border); 
-            gap: 1px; 
-            border-top: 1px solid var(--ios-border);
+            gap: 8px; 
+            auto-rows: 115px; 
         }
         
-        .weekday-box {
-            background: var(--ios-header-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 600; 
-            text-transform: uppercase;
-            color: rgba(60, 60, 67, 0.7);
-            padding: 8px 0;
-        }
-
         .day { 
-            background: rgba(255, 255, 255, 0.65); 
+            position: relative; 
+            height: 110px; 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 10px; 
             display: flex; 
             flex-direction: column; 
-            padding: 3px;
-            box-sizing: border-box;
-            min-height: 0; 
+            overflow: hidden; 
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .day:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
         
+        .current-day {
+            border: 2px solid #f59e0b !important; 
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8); 
+            z-index: 2; 
+        }
+        
+        .half { 
+            flex: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; 
+            padding: 4px 6px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            transition: background 0.3s ease;
+        }
+        .half:last-child { border-bottom: none; }
+        
+        .bg-none { background: transparent; }
+        .bg-green { background: rgba(34, 197, 94, 0.75); }
+        .bg-red { background: rgba(239, 68, 68, 0.75); }
+        .bg-fuchsia { background: rgba(217, 70, 239, 0.75); }
+
         .date-number { 
-            font-weight: 500; 
-            font-size: 14px;
-            color: #000; 
-            text-align: center;
-            width: 24px;
-            height: 24px;
-            line-height: 24px;
-            margin: 0 auto 3px auto;
-            border-radius: 50%;
-            flex: 0 0 auto;
+            position: absolute; 
+            top: 3px; 
+            left: 3px; 
+            font-weight: 700; 
+            font-size: 0.85rem;
+            color: #1e293b; 
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1px 6px;
+            border-radius: 6px;
+            pointer-events: none; 
+            z-index: 10;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        .current-day .date-number { 
-            background: var(--ios-red); 
-            color: white; 
-            font-weight: 600;
-        }
+        .current-day .date-number { background: #f59e0b; color: white; }
 
         .calendar-input { 
-            flex: 1 1 auto; 
-            min-height: 0; 
-            width: 100%; 
-            padding: 2px 4px; 
-            margin-bottom: 2px;
-            border: none; 
-            border-radius: 4px; 
-            font-size: 10px; 
-            font-weight: 500;
+            width: 85%; /* Mejorado para móviles */
+            padding: 6px; 
+            text-align: left; 
+            border: 1px solid rgba(0, 0, 0, 0.15); 
+            border-radius: 6px; 
+            font-size: 12px; /* Ligeramente más grande para legibilidad */
+            font-weight: 600;
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.85); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s;
             box-sizing: border-box;
-            outline: none;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            letter-spacing: -0.3px;
         }
-        .calendar-input:focus { z-index: 10; position: relative; }
+        .calendar-input:focus { background: rgba(255, 255, 255, 1); outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
 
-        .bg-none { background: rgba(0, 0, 0, 0.05); color: #000; }
-        .bg-red { background: var(--ios-red); color: white; }
-        .bg-green { background: var(--ios-green); color: white; }
-        .bg-fuchsia { background: var(--ios-purple); color: white; }
-
-        @media (min-width: 769px) {
-            #calendar-container { height: 85vh; border-radius: 24px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
-            .header-controls { padding: 20px; }
-            .calendar-input { font-size: 12px; padding: 4px 6px; }
-            .date-number { width: 28px; height: 28px; line-height: 28px; font-size: 15px; }
+        /* Ajustes específicos para móviles */
+        @media (max-width: 768px) {
+            #calendar-container { padding: 12px; }
+            .header-controls { flex-wrap: wrap; justify-content: center; padding: 10px; }
+            .header-controls h1 { width: 100%; margin: 10px 0; order: -1; }
+            .calendar-inner { min-width: 650px; } /* Permite hacer scroll en horizontal sin aplastar el contenido */
         }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h2>Calendario</h2>
-        <input type="password" id="passwd-input" placeholder="Contraseña" onkeypress="checkEnter(event)">
-        <button onclick="verifyPassword()">Desbloquear</button>
+        <h2>Acceso Restringido</h2>
+        <input type="password" id="passwd-input" placeholder="Introduce la contraseña" onkeypress="checkEnter(event)">
+        <button onclick="verifyPassword()">Entrar</button>
         <div id="error-msg">Contraseña incorrecta</div>
-        <div id="sync-msg">Conectando a la red...</div>
     </div>
 
     <div id="calendar-container">
         <div class="header-controls">
-            <h1><span id="month-name">Calendario</span> <span class="cloud-indicator" id="cloud-status"></span></h1>
-            <div class="nav-buttons">
-                <button onclick="changeMonth(-1)">&#10094;</button>
-                <button onclick="changeMonth(1)">&#10095;</button>
+            <button onclick="changeMonth(-1)">&#10094; Anterior</button>
+            <h1 id="month-name">Calendario</h1>
+            <button onclick="changeMonth(1)">Siguiente &#10095;</button>
+        </div>
+        
+        <!-- Nuevo contenedor para el scroll horizontal -->
+        <div class="scroll-wrapper">
+            <div class="calendar-inner">
+                <div class="weekdays">
+                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                </div>
+                <div id="calendar-grid"></div>
             </div>
         </div>
-        <div id="calendar-grid"></div>
     </div>
 
     <script>
-        // ==========================================
-        // CONFIGURACIÓN DE FIREBASE (¡Pon los tuyos aquí!)
-        // ==========================================
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-        
-        let db = null;
-        let datosDescargados = false;
-        let primerArranqueRealizado = false;
-        
-        try {
-            if (firebaseConfig.apiKey !== "TU_API_KEY") {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-            }
-        } catch(e) { console.warn("Firebase no inicializado"); }
-        // ==========================================
-
         const PASSWORD_SECRETA = "1234"; 
 
         function checkEnter(e) {
@@ -259,14 +260,9 @@ const app = initializeApp(firebaseConfig);
         function verifyPassword() {
             const inputVal = document.getElementById('passwd-input').value;
             if (inputVal === PASSWORD_SECRETA) {
-                document.getElementById('error-msg').style.display = 'none';
-                document.getElementById('sync-msg').style.display = 'block';
-                
-                loadSavedDataFromCloud(() => {
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('calendar-container').style.display = 'flex';
-                    initCalendar();
-                });
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('calendar-container').style.display = 'block';
+                initCalendar();
             } else {
                 document.getElementById('error-msg').style.display = 'block';
                 document.getElementById('passwd-input').value = '';
@@ -281,156 +277,47 @@ const app = initializeApp(firebaseConfig);
         const realToday = new Date();
         const todayStr = `${realToday.getFullYear()}-${String(realToday.getMonth()+1).padStart(2, '0')}-${String(realToday.getDate()).padStart(2, '0')}`;
 
-        let saveTimeout;
-        function handleInput(inputEl) {
-            applyAutoColor(inputEl);
-            
-            const indicator = document.getElementById('cloud-status');
-            indicator.style.opacity = '1';
-            indicator.style.backgroundColor = '#f59e0b'; 
-
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveAllDataToCloud();
-            }, 500); // Reducido a medio segundo para sincronización más rápida
-        }
-
         function applyAutoColor(inputEl) {
             const text = inputEl.value.toLowerCase().trim();
-            inputEl.classList.remove('bg-none', 'bg-red', 'bg-green', 'bg-fuchsia');
+            const halfEl = inputEl.parentElement;
+            
+            halfEl.classList.remove('bg-none', 'bg-red', 'bg-green', 'bg-fuchsia');
 
-            if (text.includes('alberto')) { inputEl.classList.add('bg-red'); } 
-            else if (text.includes('manuel')) { inputEl.classList.add('bg-green'); } 
-            else if (text.includes('elena')) { inputEl.classList.add('bg-fuchsia'); } 
-            else { inputEl.classList.add('bg-none'); }
+            if (text.includes('alberto')) {
+                halfEl.classList.add('bg-red');
+            } else if (text.includes('manuel')) {
+                halfEl.classList.add('bg-green');
+            } else if (text.includes('elena')) {
+                halfEl.classList.add('bg-fuchsia');
+            } else {
+                halfEl.classList.add('bg-none');
+            }
         }
 
-        function saveAllDataToCloud() {
+        function saveAllData() {
             let data = {};
+            const savedStr = localStorage.getItem('miCalendarioData');
+            if (savedStr) data = JSON.parse(savedStr);
+
             document.querySelectorAll('.day').forEach(dayEl => {
                 const date = dayEl.dataset.date;
                 if(!date) return;
                 
-                const inputs = dayEl.querySelectorAll('.calendar-input');
-                if(inputs.length === 2) {
-                    if(inputs[0].value.trim() !== '' || inputs[1].value.trim() !== '') {
-                        data[date] = {
-                            top: { text: inputs[0].value },
-                            bottom: { text: inputs[1].value }
-                        };
-                    }
+                const halves = dayEl.querySelectorAll('.half');
+                if(halves.length === 2) {
+                    const topColor = Array.from(halves[0].classList).find(c => c.startsWith('bg-'));
+                    const topText = halves[0].querySelector('input').value;
+                    
+                    const bottomColor = Array.from(halves[1].classList).find(c => c.startsWith('bg-'));
+                    const bottomText = halves[1].querySelector('input').value;
+                    
+                    data[date] = {
+                        top: { color: topColor, text: topText },
+                        bottom: { color: bottomColor, text: bottomText }
+                    };
                 }
             });
-
             localStorage.setItem('miCalendarioData', JSON.stringify(data));
-
-            if (db && datosDescargados) {
-                db.ref('calendarioApp/datos').set(data).then(() => {
-                    const indicator = document.getElementById('cloud-status');
-                    indicator.style.backgroundColor = 'var(--ios-green)';
-                    setTimeout(() => { indicator.style.opacity = '0'; }, 1000);
-                }).catch(() => {
-                    const indicator = document.getElementById('cloud-status');
-                    indicator.style.backgroundColor = 'var(--ios-red)';
-                });
-            } else {
-                document.getElementById('cloud-status').style.opacity = '0';
-            }
-        }
-
-        let cloudDataGlobal = {}; 
-
-        function loadSavedDataFromCloud(onComplete) {
-            if (!db) {
-                document.getElementById('sync-msg').innerText = "Iniciando modo local...";
-                setTimeout(onComplete, 500);
-                return;
-            }
-
-            let timeoutHecho = false;
-            
-            const timeoutSeguridad = setTimeout(() => {
-                if(!timeoutHecho) {
-                    timeoutHecho = true;
-                    document.getElementById('sync-msg').innerText = "Modo sin conexión (Timeout)";
-                    setTimeout(onComplete, 1000);
-                }
-            }, 5000);
-
-            // ==========================================
-            // MAGIA DE SINCRONIZACIÓN EN TIEMPO REAL
-            // Cambiado de .once() a .on() para que "escuche" constantemente
-            // ==========================================
-            db.ref('calendarioApp/datos').on('value', (snapshot) => {
-                if(!timeoutHecho) {
-                    clearTimeout(timeoutSeguridad);
-                    timeoutHecho = true;
-                }
-                
-                cloudDataGlobal = snapshot.val() || {};
-                datosDescargados = true;
-                
-                // Si es la primera vez que carga, abre la app
-                if(!primerArranqueRealizado) {
-                    primerArranqueRealizado = true;
-                    onComplete();
-                } else {
-                    // Si ya estaba abierta, actualiza la vista en vivo ("Live Sync")
-                    applyDataToViewLive();
-                }
-            });
-        }
-
-        // Esta nueva función pinta los datos en vivo PERO respeta lo que estés escribiendo en ese momento
-        function applyDataToViewLive() {
-            let dataToUse = cloudDataGlobal;
-            
-            document.querySelectorAll('.day').forEach(dayEl => {
-                const date = dayEl.dataset.date;
-                const inputs = dayEl.querySelectorAll('.calendar-input');
-                
-                if(inputs.length === 2) {
-                    if(dataToUse[date]) {
-                        // Comprueba si estás tecleando AHORA MISMO en la casilla de arriba
-                        if (document.activeElement !== inputs[0]) {
-                            inputs[0].value = dataToUse[date].top?.text || '';
-                            applyAutoColor(inputs[0]); 
-                        }
-                        // Comprueba si estás tecleando AHORA MISMO en la casilla de abajo
-                        if (document.activeElement !== inputs[1]) {
-                            inputs[1].value = dataToUse[date].bottom?.text || '';
-                            applyAutoColor(inputs[1]); 
-                        }
-                    } else {
-                        // Si borran un dato desde otro dispositivo, lo borra en este también (si no estás en él)
-                        if (document.activeElement !== inputs[0]) { inputs[0].value = ''; applyAutoColor(inputs[0]); }
-                        if (document.activeElement !== inputs[1]) { inputs[1].value = ''; applyAutoColor(inputs[1]); }
-                    }
-                }
-            });
-        }
-
-        // Función original de pintado para cuando cambias de mes (pinta todo sin restricciones)
-        function applyDataToViewFull() {
-            let dataToUse = cloudDataGlobal;
-            if (Object.keys(dataToUse).length === 0) {
-                const localStr = localStorage.getItem('miCalendarioData');
-                if (localStr) dataToUse = JSON.parse(localStr);
-            }
-
-            document.querySelectorAll('.day').forEach(dayEl => {
-                const date = dayEl.dataset.date;
-                if(dataToUse[date]) {
-                    const inputs = dayEl.querySelectorAll('.calendar-input');
-                    if(inputs.length === 2) {
-                        inputs[0].value = dataToUse[date].top?.text || '';
-                        applyAutoColor(inputs[0]); 
-                        
-                        inputs[1].value = dataToUse[date].bottom?.text || '';
-                        applyAutoColor(inputs[1]); 
-                    }
-                }
-            });
         }
 
         function changeMonth(offset) {
@@ -445,47 +332,57 @@ const app = initializeApp(firebaseConfig);
             grid.innerHTML = ''; 
             document.getElementById('month-name').textContent = monthNames[month] + " " + year;
 
-            const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-            diasSemana.forEach(dia => {
-                const div = document.createElement('div');
-                div.className = 'weekday-box';
-                div.textContent = dia;
-                grid.appendChild(div);
-            });
-
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             let startDay = firstDay === 0 ? 6 : firstDay - 1;
 
-            const totalCeldasNecesarias = startDay + daysInMonth;
-            const numeroFilasDias = Math.ceil(totalCeldasNecesarias / 7);
-            const totalCeldasGrid = numeroFilasDias * 7;
+            for (let i = 0; i < startDay; i++) {
+                grid.innerHTML += '<div></div>';
+            }
 
-            grid.style.gridTemplateRows = `auto repeat(${numeroFilasDias}, minmax(0, 1fr))`;
-
-            for (let i = 0; i < totalCeldasGrid; i++) {
+            for (let i = 1; i <= daysInMonth; i++) {
                 let dayDiv = document.createElement('div');
                 dayDiv.className = 'day';
+                const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                dayDiv.dataset.date = dateStr;
 
-                if (i >= startDay && i < startDay + daysInMonth) {
-                    let dayNum = i - startDay + 1;
-                    const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                    dayDiv.dataset.date = dateStr;
-
-                    if (dateStr === todayStr) { dayDiv.classList.add('current-day'); }
-
-                    dayDiv.innerHTML = `
-                        <div class="date-number">${dayNum}</div>
-                        <input type="text" class="calendar-input bg-none" placeholder="..." oninput="handleInput(this)">
-                        <input type="text" class="calendar-input bg-none" placeholder="..." oninput="handleInput(this)">
-                    `;
-                } else {
-                    dayDiv.style.background = "rgba(255,255,255,0.35)";
+                if (dateStr === todayStr) {
+                    dayDiv.classList.add('current-day');
                 }
+
+                dayDiv.innerHTML = `
+                    <div class="date-number">${i}</div>
+                    <div class="half bg-none">
+                        <input type="text" class="calendar-input" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
+                    </div>
+                    <div class="half bg-none">
+                        <input type="text" class="calendar-input" placeholder="..." oninput="applyAutoColor(this)" onchange="saveAllData()">
+                    </div>
+                `;
                 grid.appendChild(dayDiv);
             }
+            loadSavedData();
+        }
+
+        function loadSavedData() {
+            const savedStr = localStorage.getItem('miCalendarioData');
+            if(!savedStr) return;
             
-            applyDataToViewFull();
+            const data = JSON.parse(savedStr);
+            document.querySelectorAll('.day').forEach(dayEl => {
+                const date = dayEl.dataset.date;
+                if(data[date]) {
+                    const halves = dayEl.querySelectorAll('.half');
+                    
+                    const topInput = halves[0].querySelector('input');
+                    topInput.value = data[date].top.text || '';
+                    applyAutoColor(topInput); 
+                    
+                    const bottomInput = halves[1].querySelector('input');
+                    bottomInput.value = data[date].bottom.text || '';
+                    applyAutoColor(bottomInput); 
+                }
+            });
         }
 
         function initCalendar() {
