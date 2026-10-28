@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -348,9 +350,20 @@ databaseURL: "calendario-cuide.firebasestorage.app", /* NO OLVIDES ESTA LÍNEA *
                 grid.innerHTML += '<div></div>';
             }
 
-            for (let i = 1; i <= daysInMonth; i++) {
+           for (let i = 1; i <= daysInMonth; i++) {
                 let dayDiv = document.createElement('div');
                 dayDiv.className = 'day';
+                
+                // --- NUEVO CÓDIGO: Detectar si es fin de semana o entre semana ---
+                // En JavaScript, 0 es Domingo y 6 es Sábado
+                let currentDayOfWeek = new Date(year, month, i).getDay();
+                if (currentDayOfWeek === 0 || currentDayOfWeek === 6) {
+                    dayDiv.classList.add('weekend-day');
+                } else {
+                    dayDiv.classList.add('weekday-day');
+                }
+                // -----------------------------------------------------------------
+
                 const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 dayDiv.dataset.date = dateStr;
 
